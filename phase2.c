@@ -5,7 +5,7 @@
 #include<math.h>
 #include<unistd.h>
 #include<ncurses.h>
-#include "progect.h"
+#include "project.h"
 
 
 typedef long long int ll;
@@ -187,7 +187,8 @@ void printBuff()
 {
    init_pair(1, COLOR_GREEN, COLOR_YELLOW);
    init_pair(2, COLOR_BLACK, COLOR_RED);
-   memset(slct, '\0', sizeof slct);
+   if(ed.mode == 'v')
+      memset(slct, '\0', sizeof slct);
    for(int i = ed.st_line; i < ed.st_line + 10; i++)
    {
       //if(select())
@@ -315,7 +316,7 @@ void remove_slct()
       if(fl)
          st[strlen(st)] = '\n';
    }
-   //printf("%s", st);
+   //printf("%s", ed.file_name);
    Put_st_in_ed(st);
    ed.y = 0;
    ed.x = Dis;
@@ -358,9 +359,6 @@ void get_all_ed(char* st)
       st[cnt++] = '\n';   
    }
 
-   //for(int i = 0; i < strlen(st); i++)
-     // ed.Bar[i] = st[i];
-   //ed.Bar[0] = ed.line; 
    return;
 }
 
@@ -485,7 +483,7 @@ void go_to_next_match()
          {
             ed.y = i-ed.st_line;
             ed.x = j+Dis;
-            printf("goto : %d %d  ", ed.x, ed.y);
+            //printf("goto : %d %d  ", ed.x, ed.y);
             return;
          }
       }
@@ -564,7 +562,15 @@ void process(char *q)
       return;
    }
    
-   quary(q);
+   char ans[N] = "operation successful";
+   char inval[N] = "invalid command";
+   if(!query(q, ans))
+   {
+      for(int i = 0; i < strlen(inval); i++)
+         ans[i] = inval[i];
+   }
+   Put_st_in_ed(ans);
+   
    
 
    memset(ed.Bar, '\0', sizeof ed.Bar); 
@@ -609,7 +615,7 @@ void handel(int input)
       if(input == 'd')
       {
          Put_in_clipboard(slct);
-         remove_slct(ed.file_name);
+         remove_slct();
          ed.mode = 'n';
          return;      
       }  

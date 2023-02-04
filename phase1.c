@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <sys/stat.h>
 #include<unistd.h>
-#include "progect.h"
+#include "project.h"
 
 
 
@@ -23,20 +23,27 @@ typedef double db;
 
 
 
-
-
 int main()
 {
     //creatfile("root/a.txtaaaalfk");
     //return 0;
     //printf("%s\n", getcwd(CWD, 100));
-    char q[10000];
+    char q[N], ans[N] = "ok", inval[N] = "invalid command";
     scanf("%[^\n]", q);
 
     while(strcmp(q, "exit"))   
     {
        
-        query(q);
+        if(!query(q, ans))
+        {
+            for(int i = 0; i < strlen(inval); i++)
+                ans[i] = inval[i];
+        }
+        
+        printf("%s\n", ans);
+        memset(ans, '\0', sizeof ans);
+        ans[0] = 'o';
+        ans[1] = 'k';
     
         char temp;
         scanf("%c",&temp);

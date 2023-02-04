@@ -14,10 +14,13 @@
 
 char CWD[100];
 
+/*
 void invalid_command()
 {
     printf("invalid command\n");
 }
+*/
+
 bool exists(char *path)
 {
     FILE *file;
@@ -144,11 +147,9 @@ void Put(char* st, char* path)
 
 bool creatfile(char *path)
 {
-    //return;
     if(!valid(path) || exists(path))
     {
-        return 0;
-        invalid_command();
+        return 0;   
     }
     
     int stfile = 0;
@@ -316,12 +317,12 @@ void auto_indent(char *st1, char *st2)
     
 }
 
-void closing_pairs(char* path)
+bool closing_pairs(char* path)
 {
     if(!valid(path) || !exists(path))
     {
-        invalid_command();
-        return;
+        //invalid_command();
+        return 0;
     }
     char st2[10000] = {"\0"}, st1[1000] = {"\0"};
 
@@ -338,17 +339,20 @@ void closing_pairs(char* path)
     fp = fopen(path, "w");
     //printf("%s", string);
     fputs(st2, fp);
+    //for(int i = 0; i < strlen(st2); i++)
+      //  ans[i] = st2[i];
     fclose (fp);
+    return 1;
 }
 
 
-void insert(char *path, char *str, int x, int y)
+bool insert(char *path, char *str, int x, int y)
 {
 
     if(!valid(path) || !exists(path) || x == -1 || y == -1 || str == NULL)
     {
-        invalid_command();
-        return;
+        //invalid_command();
+        return 0;
     }
    
     copy_file(path);
@@ -366,40 +370,42 @@ void insert(char *path, char *str, int x, int y)
     }
 
     get_all_char(string, fp);
-
+    //printf("%s", string);
     fclose (fp);
     fp = fopen(path, "w");
     fputs(string, fp);
     fclose (fp);
+    return 1;
 }
 
-void cat(char *path)
+bool cat(char *path, char *ans)
 {
-   
     //printf("%s\n", path);
     if(!valid(path) || !exists(path))
     {
-        invalid_command();
-        return;
+        return 0;
     }
 
     FILE *fp;
     fp = fopen(path, "r");
     char string[10000] = {"\0"};
     get_all_char(string, fp);
-    printf("%s", string);
+    
+
+    for(int i = 0; i < strlen(string); i++)
+        ans[i] = string[i];
+
     fclose (fp);
+    return 1;
     
 }
 
-void removestr(char *path, int x, int y, int dir, int size_num)
+bool removestr(char *path, int x, int y, int dir, int size_num)
 {
-  
-    //printf("%s-\n", path);
+
     if(!valid(path) || !exists(path) || x == -1 || y == -1 || size_num == -1 || dir == -1)
     {
-        invalid_command();
-        return;
+        return 0;
     }
     FILE *fp;
     fp = fopen(path, "r");
@@ -410,8 +416,7 @@ void removestr(char *path, int x, int y, int dir, int size_num)
     {
         if(strlen(string) < size_num)
         {
-            invalid_command();
-            return;
+            return 0;
         }
         for(int i = 0; i < size_num; i++)
           string[strlen(string)-1] = '\0';
@@ -425,8 +430,8 @@ void removestr(char *path, int x, int y, int dir, int size_num)
             c = getc(fp);
             if(c == EOF)
             {
-                invalid_command();
-                return;
+                //invalid_command();
+                return 0;
             }
         }
 
@@ -441,18 +446,19 @@ void removestr(char *path, int x, int y, int dir, int size_num)
     //printf("%s", string);
     fputs(string, fp);
     fclose (fp);
+    return 1;
 
 
 }
 
 
-void copy(char *path, int x, int y, int dir, int size_num)
+bool copy(char *path, int x, int y, int dir, int size_num)
 {
    // printf("%s %d %d %d %d \n", path, x, y, size_num, dir);
     if(!valid(path) || !exists(path) || x == -1 || y == -1 || size_num == -1 || dir == -1)
     {
-        invalid_command();
-        return;
+        //invalid_command();
+        return 0;
     }
 
     FILE *fp;
@@ -466,8 +472,8 @@ void copy(char *path, int x, int y, int dir, int size_num)
     {
         if(strlen(tmp) < size_num)
         {
-            invalid_command();
-            return;
+            //invalid_command();
+            return 0;
         }
         int k = size_num;
         for(int i = 0; i < size_num; i++)
@@ -484,8 +490,8 @@ void copy(char *path, int x, int y, int dir, int size_num)
             string[i] = getc(fp);
             if(string[i] == EOF)
             {
-                invalid_command();
-                return;
+                //invalid_command();
+                return 0;
             }
         }
 
@@ -493,21 +499,21 @@ void copy(char *path, int x, int y, int dir, int size_num)
     //printf("%s", string);
     fclose (fp);
     Put_in_clipboard(string);
+    return 1;
 
 }
 
-void cut(char *path, int x, int y, int dir, int size_num)
+bool cut(char *path, int x, int y, int dir, int size_num)
 {
-    copy(path, x, y, dir, size_num);
-    removestr(path, x, y, dir, size_num);
+    return (copy(path, x, y, dir, size_num) && removestr(path, x, y, dir, size_num));
 }
 
-void paste(char *path, int x, int y)
+bool paste(char *path, int x, int y)
 {
     if(!valid(path) || !exists(path))
     {
-        invalid_command();
-        return;
+        //invalid_command();
+        return 0;
     }
     FILE *fp;
     fp = fopen("clipboard.txt", "r");
@@ -516,14 +522,16 @@ void paste(char *path, int x, int y)
     get_all_char(string, fp);
     fclose (fp);
     insert(path, string, x, y);
+    return 1;
 
 }
-void find(char *path, char *str, bool all, bool count, bool byword, bool at)     // count (at n) byword all              //find -str hiva -file /root/a.txt -all -byword
+
+bool find(char *path, char *str, bool all, bool count, bool byword, bool at)     // count (at n) byword all              //find -str hiva -file /root/a.txt -all -byword
 {
     if(!valid(path) || !exists(path) || str == NULL)
     {
-        invalid_command();
-        return;
+        //invalid_command();
+        return 0;
     }
 
     FILE *fp;
@@ -532,12 +540,12 @@ void find(char *path, char *str, bool all, bool count, bool byword, bool at)    
     get_all_char(string, fp);
     fclose (fp);
 
-    printf("%s\n\n\n", string);
+    //printf("%s\n\n\n", string);
 
     if(count + (at != 0) + all > 1)
     {
-        invalid_command();
-        return;
+        //invalid_command();
+        return 0;
     }
     if(!count && !all)
         at = 1;
@@ -565,7 +573,7 @@ void find(char *path, char *str, bool all, bool count, bool byword, bool at)    
                     if(!byword && cnt == at)
                     {
                         print(k);
-                        return;
+                        return 1;
                     }
 
                     if(!byword && all)
@@ -586,7 +594,7 @@ void find(char *path, char *str, bool all, bool count, bool byword, bool at)    
         if(byword && cnt_vaj == at)
         {
             print(ind_vaj);
-            return;
+            return 1;
         }
         if(byword && all && fl)
         {
@@ -617,16 +625,18 @@ void find(char *path, char *str, bool all, bool count, bool byword, bool at)    
     if(all)
         printf("\n");
 
-    return;
+    return 1; 
 }
 
 
-void grep(char *path, char *str, bool L, bool C)
+bool grep(char *path, char *str, bool L, bool C, char *ans)
 {
+    int ans_len = 0;
+    ans[1] = ans[0] = '\0';
     if(str == NULL)
     {
-        invalid_command();
-        return;
+        //invalid_command();
+        return 0;
     }
     
     char copy_path[100] = {"\0"};
@@ -640,8 +650,8 @@ void grep(char *path, char *str, bool L, bool C)
         //printf("%s-\n", token);
         if(!valid(token) || !exists(token))
         {
-            invalid_command();
-            return;
+            //invalid_command();
+            return 0;
         }
         token = strtok(NULL, " ");
     }
@@ -662,7 +672,7 @@ void grep(char *path, char *str, bool L, bool C)
         char string[10000] = {"\0"};
         get_all_char(string, fp);
         fclose (fp);
-       // printf("%s--\n", string);
+        //printf("%s--\n", string);
 
         int st = 0;
         for(int i = 0; i < strlen(string); i++)
@@ -674,19 +684,34 @@ void grep(char *path, char *str, bool L, bool C)
             }
             if(match(string+i, str))
             {
+                //print(-1);
                 cnt++;
                 if(!C)
-                    printf("%s", token2);
+                {
+                    for(int i = 0; i < strlen(token2); i++)
+                        ans[ans_len++] = token2[i];   
+                    //printf("%s", token2);
+                }
                 if(!C && !L)
-                    printf(": ");        
+                {
+                    ans[ans_len++] = ':';
+                    ans[ans_len++] = ' ';
+                    //printf(": ");        
+                }
                 while(string[st] != '\n')
                 {
                     if(!C && !L)
-                        printf("%c", string[st]);
+                    {
+                        ans[ans_len++] = string[st]; 
+                        //printf("%c", string[st]);
+                    }
                     st++;
                 }
                 if(!C)
-                    printf("\n");
+                {
+                    ans[ans_len++] = '\n';
+                    //printf("\n");
+                }
                 i = st;
             }
         }
@@ -694,27 +719,40 @@ void grep(char *path, char *str, bool L, bool C)
         token2 = strtok(NULL, " ");
     }
     if(C)
-        print(cnt);
+    {
+        while(cnt)
+        {
+            int x = cnt%10;
+            char y = (char)(x + '0');
+            ans[ans_len++] = y;
+            cnt /= 10;
 
-    /*
+        }
+        //print(cnt);
+    }
 
-    */
-
+    return 1;
 
 
 }
 
-void undo(char *path)
+bool undo(char *path)
 {
     if(!valid(path) || !exists(path))
     {
-        invalid_command();
-        return;
+        //invalid_command();
+        return 0;
     }
 
     FILE *fp, *fpcp;
     
-    path[strlen(path)] = '*';
+    //printf("%s\n", path);
+    int len = strlen(path);
+    path[len] = '*';
+    path[len + 1] = '\0';
+    //printf("%s\n", path);
+
+
     fpcp = fopen(path, "r");
     char stt[10000] = {"\0"};
     get_all_char(stt, fpcp);
@@ -722,12 +760,14 @@ void undo(char *path)
 
     fclose (fpcp);
 
+   // print(-1);
+
     copy_file(path);
    
     fp = fopen(path, "w");
     fputs(stt, fp);
     fclose (fp);
-
+    return 1;
 
 
 }
@@ -740,8 +780,10 @@ int get_cnt_line(char *st)
     return ans;    
 }
 
-void compare(char *path)
+bool compare(char *path, char *ans)
 {
+    int ans_len = 0;
+    ans[1] = ans[0] = '\0';
     char p1[10000] = {"\0"}, p2[10000] = {"\0"};
     int ii = 0;
     while(path[ii] != ' ')
@@ -759,8 +801,8 @@ void compare(char *path)
 
     if(!valid(p1) || !exists(p1) || !valid(p2) || !exists(p2))
     {
-        invalid_command();
-        return;
+        //invalid_command();
+        return 0;
     }
 
     char st1[10000] = {"\0"}, st2[10000] = {"\0"};
@@ -772,7 +814,7 @@ void compare(char *path)
     fp = fopen(p2, "r");
     get_all_char(st2, fp);
     fclose (fp);
-    printf("%s-\n%s-\n", st1, st2);
+    //printf("%s-\n%s-\n", st1, st2);
     //return; 
     int i = 0, j = 0, l = 1; 
     while(l < strlen(st1) && i < strlen(st1) && j < strlen(st2))
@@ -787,61 +829,114 @@ void compare(char *path)
             t_i++;
             t_j++;
         }    
+        if(st1[t_i] != '\n' || st2[t_j] != '\n')
+            fl = false;
+        if(st1[t_i] == '\n' && st2[t_j] == '\n')
+            fl = true;    
 
         if(!fl)
-            printf("============ #%d ===========\n", l);
+        {
+            char *tmp = "============ #";
+            char indline = (char)('0' + l);
+            char *tmp2 = " ============\n";
+            //tmp[14] = indline;
+            for(int i = 0; i < strlen(tmp); i++)
+                ans[ans_len++] = tmp[i];
+            ans[ans_len++] = indline;
+            for(int i = 0; i < strlen(tmp2); i++)
+                ans[ans_len++] = tmp2[i]; 
+            //printf("%s%c%s\n", tmp, indline, tmp2);
+
+        }
 
         while(i < strlen(st1) && st1[i] != '\n')
         {
             if(!fl)
-                printf("%c", st1[i]);
+                ans[ans_len++] = st1[i]; //printf("%c", st1[i]);
             i++;
         }
         i++;
         if(!fl)
-            printf("\n");
+            ans[ans_len++] = '\n'; //printf("\n");
 
         while(j < strlen(st2) && st2[j] != '\n')
         {
             if(!fl)
-                printf("%c", st2[j]);
+                ans[ans_len++] = st2[j]; //printf("%c", st2[j]);
             j++;
         }
         j++;
         if(!fl)
-            printf("\n");
+            ans[ans_len++] = '\n'; //printf("\n");
         l++;
        
     }
     //printf("%d %d\n", i, j);
     if(i != strlen(st1))
     {
-        printf("<<<<<<<<<<< #%d - #%d <<<<<<<<<<<\n", l, get_cnt_line(st1));
+        //printf("<<<<<<<<<<< #%d - #%d <<<<<<<<<<<\n", l, get_cnt_line(st1));
+        char *tmp = "<<<<<<<<<<< #";
+        char indline = (char)('0' + l);
+        char indline2 = (char)('0' + get_cnt_line(st1));
+        char *tmp2 = " <<<<<<<<<<<\n";
+        
+        for(int i = 0; i < strlen(tmp); i++)
+            ans[ans_len++] = tmp[i];
+        ans[ans_len++] = indline;
+        ans[ans_len++] = ' ';
+        ans[ans_len++] = '-';
+        ans[ans_len++] = ' ';
+        ans[ans_len++] = '#';
+        ans[ans_len++] = indline2;
+        for(int i = 0; i < strlen(tmp2); i++)
+            ans[ans_len++] = tmp2[i]; 
+
+
         while(i < strlen(st1))
         {
-            while(i < strlen(st1) && st1[i] != '\n')
-                printf("%c", st1[i++]);
+            while(i < strlen(st1))
+                ans[ans_len++] = st1[i++]; //printf("%c", st1[i++]);
             l++;
             i++;
         }
-        printf("\n");
+        ans[ans_len++] = '\n'; //printf("\n");
 
     }
 
 
     if(j != strlen(st2))
     {
-        printf(">>>>>>>>>>>> #%d - #%d >>>>>>>>>>>>n", l, get_cnt_line(st2));
+        //printf(">>>>>>>>>>>> #%d - #%d >>>>>>>>>>>>n", l, get_cnt_line(st2));
+        
+        char *tmp = ">>>>>>>>>>>>#";
+        char indline = (char)('0' + l);
+        char indline2 = (char)('0' + get_cnt_line(st2));
+        char *tmp2 = " >>>>>>>>>>>>\n";
+        
+        for(int i = 0; i < strlen(tmp); i++)
+            ans[ans_len++] = tmp[i];
+        ans[ans_len++] = indline;
+        ans[ans_len++] = ' ';
+        ans[ans_len++] = '-';
+        ans[ans_len++] = ' ';
+        ans[ans_len++] = '#';
+        ans[ans_len++] = indline2;
+        for(int i = 0; i < strlen(tmp2); i++)
+            ans[ans_len++] = tmp2[i]; 
+       
+       
+       
         while(j < strlen(st2))
         {
-            printf("============ #%d ===========\n", l);
-            while(j < strlen(st2) && st2[j] != '\n')
-                printf("%c", st2[j++]);
+            //printf("============ #%d ===========\n", l);
+            while(j < strlen(st2))
+                ans[ans_len++] = st2[j++];//printf("%c", st2[j++]);
             l++;
             j++;
         }
-        printf("\n");
+        ans[ans_len++] = '\n'; 
     }
+    return 1;
 }
 
 
@@ -849,17 +944,17 @@ void compare(char *path)
 
 
 
-int _file_(char** token, char* path)
+int _file_(char** token, char** path)
 {
     if((*token)[0] != 'f' || (*token)[1] != 'i' || (*token)[2] != 'l' || (*token)[3] != 'e')
         return 0;
     (*token) += 5;
-    //printf("path : %s- \n", (*token));
     if((*token)[strlen((*token))-1] == ' ')
         (*token)[strlen((*token))-1] = '\0';
     fix((*token));
     (*token)++;
-    path = (*token);
+    (*path) = (*token);
+    //printf("path : %s- \n", (*path));
     return 1;
 }
 
@@ -897,14 +992,14 @@ int _borf_(char** token, int *dir)
 }
 
 
-int _str_(char** token, char *str)
+int _str_(char** token, char** str)
 {
     if((*token)[0] != 's' || (*token)[1] != 't' || (*token)[2] != 'r')
         return 0;
     (*token)[strlen((*token))-1] = '\0';
     (*token) += 4;
     fix((*token));    
-    str = (*token);
+    (*str) = (*token);
     return 1;
 }
 
@@ -953,7 +1048,7 @@ int _find_(char** token, bool *count, bool *byword, bool *all, int *at)
 }
 
 
-bool query(char *q)
+bool query(char *q, char* ans)
 {
     char *str, *path, *type;
     int dir, x, y, size_num, at;
@@ -965,15 +1060,15 @@ bool query(char *q)
     type = token;
     token++;
     token = strtok(NULL, "-");
- 
+    
     while(token != NULL)
     {
         //printf("tolen : %s-\n", token);
-        if(_file_(&token, path))
+        if(_file_(&token, &path))
             goto hell;
         else if(_find_(&token, &count, &byword, &all, &at))
             goto hell;            
-        else if(_str_(&token, str))
+        else if(_str_(&token, &str))
             goto hell;
         else if(_size_(&token, &size_num))
             goto hell;
@@ -985,7 +1080,7 @@ bool query(char *q)
             goto hell;
         else if(_L_(&token, &L))
             goto hell;
-
+        //printf("path : %s- \n", path);
         hell:
         token = strtok(NULL, "-");
     }
@@ -993,54 +1088,56 @@ bool query(char *q)
     //printf("/////////////////// \ntype : %s\nstr : %s-\npath : %s-\nx : %d\ny : %d\ndir : %d\nsizre : %d\nC : %d\nL : %d\n",type, str, path, x, y, dir, size_num, C, L);
     //printf("conut : %d\nat : %d\nbyword : %d\nall : %d\n////////////////////////////////\n", count, at, byword, all);
 
-    if(strcmp(type, "createfile") == 0)             // createfile -file /root/a.txt
+    if(strcmp(type, "createfile") == 0)             // createfile -file /root/t.txt
     {
         return creatfile(path);
     }
-    else if(strcmp(type, "insertstr") == 0)         // insertstr -file /root/a.txt -str "hhhhhhhhhhhhhhhhhhhh" -pos 1:0
+    else if(strcmp(type, "insertstr") == 0)         // insertstr -file /root/a.txt -str "akfj; ajijak  alfkj" -pos 1:0
     {
-        insert(path, str, x, y);
+        return insert(path, str, x, y);
     }
     else if(strcmp(type, "cat") == 0)               // cat -file /root/dir1/dir2/file.txt
-    {
-        cat(path);
+    {                                               // cat -file /root/a.txt
+        //printf("%s\n\n", ans);                        
+        return cat(path, ans);
     }   
     else if(strcmp(type, "removetstr") == 0)        // removetstr -file /root/dir1/dir2/file.txt -pos 2:5 -b -size 3
     {
-        removestr(path, x, y, dir, size_num); 
+        return removestr(path, x, y, dir, size_num); 
     }
     else if(strcmp(type, "copy") == 0)              // copy -file /root/dir1/dir2/file.txt -pos 2:5 -b -size 3
-    {
-        copy(path, x, y, dir, size_num);
+    {                                               // copy -file /root/a.txt -pos 2:5 -b -size 3
+        return copy(path, x, y, dir, size_num);
     }
     else if(strcmp(type, "cut") == 0)               // cut -file /root/dir1/dir2/file.txt -pos 2:5 -b -size 3
-    {
-        cut(path, x, y, dir, size_num);             
+    {   
+        return cut(path, x, y, dir, size_num);             
     }
     else if(strcmp(type, "pastestr") == 0)          // pastestr -file /root/dir1/dir2/a.txt -pos 1:0
-    {
-        paste(path, x, y);
+    {                                               // pastestr -file /root/a.txt -pos 1:0
+        return paste(path, x, y);
     }
     else if(strcmp(type, "find") == 0)              // find -str hiva -file /root/a.txt -all
     {
-        find(path, str, all, count, byword, at);
+        return find(path, str, all, count, byword, at);
     }
-    else if(strcmp(type, "grep") == 0)              //  grep -str "hiva" -files /root/b.txt /root/a.txt /root/c.txt
+    else if(strcmp(type, "grep") == 0)              //  grep -str "hiva" -files /root/t.txt /root/a.txt /root/r.txt
     {
-        grep(path, str, L, C);
+        return grep(path, str, L, C, ans);
     }
-    else if(strcmp(type, "undo") == 0) 
+    else if(strcmp(type, "undo") == 0)              // undo -file /root/a.txt
     {
-        undo(path);
+        return undo(path);
     }  
-    else if(strcmp(type, "compare") == 0)           // compare -file /root/a.txt /root/b.txt
+    else if(strcmp(type, "compare") == 0)           // compare -file /root/a.txt /root/t.txt
     {
-        compare(path);
+        return compare(path, ans);
     }
     else if(strcmp(type, "auto-indent") == 0)       // auto-indent -file /root/a.txt
     {
-        closing_pairs(path);
+        return closing_pairs(path);
     }
+    return 0;
 }
 
 
