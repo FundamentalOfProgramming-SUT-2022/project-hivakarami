@@ -325,17 +325,17 @@ void insert_input(int input)
       st[len++] = ed.Buffer[y][i];
       cnt++;
    }
-   st[len++] = '\n';
+   if(y+1 < ed.line)
+      st[len++] = '\n';
  
-
-   for(int i = y+1; i <= ed.line; i++)
+   for(int i = y+1; i < ed.line; i++)
    {
       for(int j = 0; j < strlen(ed.Buffer[i]); j++)
          st[len++] = ed.Buffer[i][j];
       st[len++] = '\n';   
    }
-
-   Put_in_clipboard(st);
+   //st[len++] = (ed.line) + '0';
+   //Put_in_clipboard(st);
    //printf("%s--", st);
    //exit(0);
    
@@ -350,7 +350,7 @@ void insert_input(int input)
      ed.x++;
    else
       ed.x--;  
-   ed.line = max(ed.line, y+1);
+   //ed.line = max(ed.line, y+1);
    memset(ed.Bar, '\0', sizeof ed.Bar); 
 }
 
@@ -705,10 +705,15 @@ void handel(int input)
       }
       if(input == 'e')
       {
-         
-         //printf("%d %d", ed.line, ed.st_line);
-         ed.y = ed.line-ed.st_line-1;
-         ed.x = strlen(ed.Buffer[ed.line-1]) + Dis;
+         int last_line = 0;
+         for(int i = ed.st_line; i < ed.st_line + 10; i++)
+         {
+            if(strlen(ed.Buffer[i]))
+               last_line = i;
+         }
+         ed.y = last_line;
+         ed.x = strlen(ed.Buffer[ed.y]) + Dis;
+         return;
       }
      
       navigation(input);   
@@ -764,10 +769,15 @@ void handel(int input)
       }
       if(input == 'e')
       {
-         
-         //printf("%d %d", ed.line, ed.st_line);
-         ed.y = ed.line-ed.st_line-1;
-         ed.x = strlen(ed.Buffer[ed.line-1]) + Dis;
+         int last_line = 0;
+         for(int i = ed.st_line; i < ed.st_line + 10; i++)
+         {
+            if(strlen(ed.Buffer[i]))
+               last_line = i;
+         }
+         ed.y = last_line;
+         ed.x = strlen(ed.Buffer[ed.y]) + Dis;
+         return;
       }
       navigation(input);   
       return;
