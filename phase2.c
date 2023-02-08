@@ -18,6 +18,7 @@ typedef double db;
 #define printll(x) printf("%lld \n", x);
 #define get(n) scanf("%d", &n);
 #define Dis 3
+#define Max_Line_Size 40
 
 int st_selectx, st_selecty;
 char slct[N];
@@ -48,7 +49,7 @@ struct Editor
 {
    int x, y, line, save, st_line;
    char mode;      // i -> insert    m | n -> noemal    v->visual   x->exit
-   char *file_name; 
+   char file_name[N]; 
    char Buffer[N][N];
    char Bar[N];
 };
@@ -107,9 +108,8 @@ void navigation(int input)
 
 void Put_st_in_ed(char* st)
 {
-   //print(-1);
    tab_to_space(st);
-   for(int i = 0; i < ed.line; i++)
+   for(int i = 0; i < N; i++)
       memset(ed.Buffer[i], '\0', sizeof ed.Buffer[i]);
    ed.line = 0;   
    //return;
@@ -118,6 +118,11 @@ void Put_st_in_ed(char* st)
       int cnt = 0;
       while(i < strlen(st) && st[i] != '\n')
       {
+         if(cnt == Max_Line_Size)
+         {
+            ed.line++;
+            cnt = 0;
+         }
          ed.Buffer[ed.line][cnt++] = st[i];
          i++;
       }
@@ -129,7 +134,22 @@ void Put_st_in_ed(char* st)
 void init(char *fn)
 {
    //print(-1);
-   ed.file_name = fn;
+
+   ed.file_name[0] = ' ';
+   ed.file_name[1] = ' ';
+   ed.file_name[2] = '\0';
+   
+   
+   if(fn != NULL)
+   {
+      memset(ed.file_name, '\0', sizeof ed.file_name);
+      for(int i = 0; i < strlen(fn); i++)
+      {
+         ed.file_name[i] = fn[i];
+         //printf("%c", fn[i]);
+      }
+   }
+
    ed.mode = 'n';
    ed.save = 1;
    ed.x = Dis;
@@ -231,6 +251,7 @@ void printBuff()
 
    WINDOW * Mode = newwin(3, x-1, y-5, 0), *Bar = newwin(2, x-1, y-2, 0);          
    wclear(Mode);
+   //wclear(Bar);
    refresh();
    box(Mode, 0, 0);
    wattron(Mode, A_REVERSE);
@@ -270,26 +291,67 @@ void printBuff()
 void insert_input(int input)
 {
    ed.save = 0;
+   int len = 0;
    copy_ed();
    char st[N] = {"\0"};
    int y = ed.y + ed.st_line;
+   //getchar();
+   for(int i = 0; i < y; i++)
+   {
+      for(int j = 0; j < strlen(ed.Buffer[i]); j++)
+         st[len++] = ed.Buffer[i][j];
+      st[len++] = '\n';   
+   }
+   
+   int cnt = 0;
    for(int i = 0; i < ed.x-Dis; i++)
    {
-      st[i] = ed.Buffer[y][i];
+      st[len++] = ed.Buffer[y][i];
+      cnt++;
    }
-   st[ed.x-Dis] = input;
+   if(input == 263)
+   {
+      //printf("%s-", st);
+      len--;
+      cnt--;
+   }
+   else
+   {
+      st[len++] = input;
+      cnt++;
+   }
    for(int i = ed.x-Dis; i < strlen(ed.Buffer[y]); i++)
    {
-      st[i+1] = ed.Buffer[y][i];
+      st[len++] = ed.Buffer[y][i];
+      cnt++;
    }
-   //mvprintw(10, 10, "%s\n", st);
+   st[len++] = '\n';
+ 
 
-   for(int i = 0; i < strlen(st); i++)
+   for(int i = y+1; i <= ed.line; i++)
    {
-      ed.Buffer[y][i] = st[i];
+      for(int j = 0; j < strlen(ed.Buffer[i]); j++)
+         st[len++] = ed.Buffer[i][j];
+      st[len++] = '\n';   
    }
-   ed.x++;
+
+   Put_in_clipboard(st);
+   //printf("%s--", st);
+   //exit(0);
+   
+   Put_st_in_ed(st);
+
+   if(input != 263 && ed.x + 1 == Max_Line_Size + Dis)
+   {
+      ed.y++;
+      ed.x = Dis;
+   }
+   else if(input != 263)
+     ed.x++;
+   else
+      ed.x--;  
    ed.line = max(ed.line, y+1);
+   memset(ed.Bar, '\0', sizeof ed.Bar); 
 }
 
 void remove_slct()
@@ -395,7 +457,11 @@ void saveas(char *pt)
    get_all_ed(st);
    Put(st, pt);
    ed.save = 1;
-   ed.file_name = pt; 
+
+   //ed.file_name = pt; 
+   for(int i = 0; i < strlen(pt); i++)
+      ed.file_name[i] = pt[i];
+;
    memset(ed.Bar, '\0', sizeof ed.Bar); 
 }
 
@@ -444,7 +510,7 @@ void find_expression(char* q)
       q++;
    ed.mode = 'f';
  
-
+   bool fl = true;
    for(int i = ed.st_line; i < ed.st_line + 10; i++)
    {
       char *st = ed.Buffer[i];
@@ -454,12 +520,18 @@ void find_expression(char* q)
       {
          if(!match(st+j, q))
             continue;
+         fl = false;   
          mark[i][j] = 1;  
          //printf("%d %d  ", i, j); 
          for(int k = j; k < j+strlen(q); k++)
             found[i][k] = 1;   
       }
    }  
+   if(fl)
+   {
+      error();
+      return;
+   }
 
    memset(ed.Bar, '\0', sizeof ed.Bar); 
 }
@@ -566,7 +638,7 @@ void process(char *q)
    char inval[N] = "invalid command";
    if(!query(q, ans))
    {
-      for(int i = 0; i < strlen(inval); i++)
+      for(int i = 0; i < N; i++)
          ans[i] = inval[i];
    }
    Put_st_in_ed(ans);
@@ -625,6 +697,20 @@ void handel(int input)
          Put_in_clipboard(slct);
          return;
       }
+      if(input == 'f')
+      {
+         ed.y = 0;
+         ed.x = Dis;
+         return;
+      }
+      if(input == 'e')
+      {
+         
+         //printf("%d %d", ed.line, ed.st_line);
+         ed.y = ed.line-ed.st_line-1;
+         ed.x = strlen(ed.Buffer[ed.line-1]) + Dis;
+      }
+     
       navigation(input);   
       return;
    }
@@ -670,7 +756,19 @@ void handel(int input)
          undo_ed();
          return;
       }
-
+      if(input == 'f')
+      {
+         ed.y = 0;
+         ed.x = Dis;
+         return;
+      }
+      if(input == 'e')
+      {
+         
+         //printf("%d %d", ed.line, ed.st_line);
+         ed.y = ed.line-ed.st_line-1;
+         ed.x = strlen(ed.Buffer[ed.line-1]) + Dis;
+      }
       navigation(input);   
       return;
    }

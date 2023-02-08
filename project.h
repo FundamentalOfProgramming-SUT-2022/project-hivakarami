@@ -629,6 +629,19 @@ bool find(char *path, char *str, bool all, bool count, bool byword, bool at)    
 }
 
 
+bool find_match(char *l, char* str)
+{
+    for(int i = 0; i < strlen(l); i++)
+    {
+        if(match(l+i, str))
+        {
+            //printf("find : %s---%d---%s\n", l, i, str);
+            return 1;
+        }
+    }
+    return 0;
+}
+
 bool grep(char *path, char *str, bool L, bool C, char *ans)
 {
     int ans_len = 0;
@@ -677,19 +690,20 @@ bool grep(char *path, char *str, bool L, bool C, char *ans)
         int st = 0;
         for(int i = 0; i < strlen(string); i++)
         {
-            if(string[i] == '\n')
+            char line[N] = {"\0"};
+            while(i < strlen(string) && string[i] != '\n')
             {
-                st = i+1;
-                continue;
+                line[strlen(line)] = string[i];
+                i++;
             }
-            if(match(string+i, str))
+            //printf("line : %s\n", line);
+            if(find_match(line, str))
             {
-                //print(-1);
                 cnt++;
                 if(!C)
                 {
-                    for(int i = 0; i < strlen(token2); i++)
-                        ans[ans_len++] = token2[i];   
+                    for(int j = 0; j < strlen(token2); j++)
+                        ans[ans_len++] = token2[j];   
                     //printf("%s", token2);
                 }
                 if(!C && !L)
@@ -698,21 +712,16 @@ bool grep(char *path, char *str, bool L, bool C, char *ans)
                     ans[ans_len++] = ' ';
                     //printf(": ");        
                 }
-                while(string[st] != '\n')
+                if(!C && !L)
                 {
-                    if(!C && !L)
-                    {
-                        ans[ans_len++] = string[st]; 
-                        //printf("%c", string[st]);
-                    }
-                    st++;
+                    for(int j = 0 ; j < strlen(line); j++)
+                        ans[ans_len++] = line[j]; 
                 }
                 if(!C)
                 {
                     ans[ans_len++] = '\n';
                     //printf("\n");
                 }
-                i = st;
             }
         }
 
@@ -1101,7 +1110,7 @@ bool query(char *q, char* ans)
         //printf("%s\n\n", ans);                        
         return cat(path, ans);
     }   
-    else if(strcmp(type, "removetstr") == 0)        // removetstr -file /root/dir1/dir2/file.txt -pos 2:5 -b -size 3
+    else if(strcmp(type, "removetstr") == 0)        // removetstr -file /root/a.txt -pos 2:3 -b -size 9
     {
         return removestr(path, x, y, dir, size_num); 
     }
@@ -1121,7 +1130,7 @@ bool query(char *q, char* ans)
     {
         return find(path, str, all, count, byword, at);
     }
-    else if(strcmp(type, "grep") == 0)              //  grep -str "hiva" -files /root/t.txt /root/a.txt /root/r.txt
+    else if(strcmp(type, "grep") == 0)              //  grep -str salam -files /root/b.txt /root/a.txt
     {
         return grep(path, str, L, C, ans);
     }
